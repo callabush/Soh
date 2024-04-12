@@ -1,0 +1,3 @@
+Module	Section	Sample Name	Source
+FastQC	all_sections	SRR19856782	/local/workdir/cab565/git_repos/Soh/data/01_raw_gzipped_fastqs/SRR19856782_fastqc.zip
+FastQC	all_sections	SRR19856781	/local/workdir/cab565/git_repos/Soh/data/01_raw_gzipped_fastqs/SRR19856781_fastqc.zip
