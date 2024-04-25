@@ -106,7 +106,7 @@ forward_filteredQual_plot
 
 ```{r prep-filtered-reads}
 # vector of our samples, extract the sample information from our file
-samples <- sapply(strsplit(basename(forward_reads), "_"), `[`,1)
+samples <- scan("/local/workdir/cab565/git_repos/Soh/samples.txt", what = "character")
 #Intuition check
 head(samples)
 
