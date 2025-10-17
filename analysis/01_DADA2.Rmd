@@ -21,7 +21,8 @@ editor_options:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE,
                       fig.align = "center",
-                      fig.path = "../figures/01_DADA2/") #Send any figure output to this folder
+                      fig.path = "../figures/01_DADA2/") 
+#Send any figure output to this folder
 ```
 
 
@@ -115,9 +116,10 @@ forward_filteredQual_plot_2
 
 ```{r prep-filtered-reads}
 # vector of our samples, extract the sample information from our file
-samples <- 
-  sapply(strsplit(basename(forward_reads), "_"),
-         function(x)paste(x[1],x[2],sep="_"))
+get_name <- function(s){unlist(strsplit(basename(s), "_"))[1]}
+
+samples <-sapply(forward_reads, get_name, USE.NAMES = FALSE)
+
 #Intuition check
 head(samples)
 
@@ -155,7 +157,7 @@ filtered_reads <-
   filterAndTrim(fwd = forward_reads, filt = filtered_forward_reads,
               trimLeft = 17,
               maxN = 0, maxEE = 1,truncQ = 2, rm.phix = TRUE,
-              compress = TRUE, multithread = 6)
+              compress = TRUE, multithread = TRUE)
 
 # 515 F primer as described in the 16S Illumina Amplicon Protocol 
 #from the Earth Microbiome Project
@@ -208,7 +210,7 @@ Error model is learned by alternating estimation of the error rates and inferenc
 ```{r learn-errors, fig.width=12, fig.height=8}
 #Forward reads
 error_forward_reads <-
-  learnErrors(filtered_forward_reads, multithread = 6)
+  learnErrors(filtered_forward_reads, multithread = TRUE)
 
 #Plot forward reads errors
 forward_error_plot <-
@@ -234,7 +236,7 @@ Similar to what is mentioned in the dada2 tutorial: the estimated error rates (b
 ```{r infer-ASVs}
 #Infer forward ASVs
 dada_forward <- dada(filtered_forward_reads, 
-                     err = error_forward_reads, multithread = 6)
+                     err = error_forward_reads, multithread = TRUE)
 typeof(dada_forward)
 
 ```
@@ -286,7 +288,7 @@ Chimera removal is an essential step in the analysis of 16S sequencing data to i
 # Remove the chimeras in the raw ASV table
 noChimeras_ASV_table <- removeBimeraDenovo(raw_ASV_table_trimmed, 
                                            method="consensus", 
-                                           multithread=6, verbose=TRUE)
+                                           multithread=TRUE, verbose=TRUE)
 
 # Check the dimensions
 dim(noChimeras_ASV_table)
@@ -338,7 +340,8 @@ track_counts_df %>%
   pivot_longer(input:nochim, 
                names_to = "read_type", values_to = "num_reads") %>%
   mutate(read_type = fct_relevel(read_type, 
-                                 "input", "filtered", "denoisedF", "nochim")) %>%
+                                 "input", "filtered",
+                                 "denoisedF", "nochim")) %>%
   ggplot(aes(x = read_type, y = num_reads, fill = read_type)) + 
   geom_line(aes(group = names), color = "grey") + 
   geom_point(shape = 21, size = 3, alpha = 0.8) + 
@@ -408,22 +411,27 @@ Now, we will write the files! We will write the following to the `data/01_DADA2/
 # Save to regular .tsv file 
 # Write BOTH the modified and unmodified ASV tables to a file!
 # Write count table with ASV numbered names (e.g. ASV_1, ASV_2, etc)
-write.table(asv_tab, "data/01_DADA2/ASV_counts.tsv", sep = "\t", quote = FALSE, col.names = NA)
+write.table(asv_tab, 
+    "/Users/cab565/Documents/Soh/data/Soh_analysis/ASV_counts.tsv",
+            sep = "\t", quote = FALSE, col.names = NA)
 # Write count table with ASV sequence names
-write.table(noChimeras_ASV_table, "data/01_DADA2/ASV_counts_withSeqNames.tsv", sep = "\t", quote = FALSE, col.names = NA)
+write.table(noChimeras_ASV_table, 
+            "data/Soh_analysis/ASV_counts_withSeqNames.tsv",
+            sep = "\t", quote = FALSE, col.names = NA)
 # Write out the fasta file for reference later on for what seq matches what ASV
 asv_fasta <- c(rbind(asv_headers, asv_seqs))
 # Save to a file!
-write(asv_fasta, "data/01_DADA2/ASVs.fasta")
-
+write(asv_fasta, "data/Soh_analysis/ASVs.fasta")
 
 # Second, let's save to a RData object 
 # Each of these files will be used in the analysis/02_Taxonomic_Assignment
 # RData objects are for easy loading :) 
-save(noChimeras_ASV_table, file = "data/01_DADA2/noChimeras_ASV_table.RData")
-save(asv_tab, file = "data/01_DADA2/ASV_counts.RData")
-# And save the track_counts_df a R object, which we will merge with metadata information in the next step of the analysis in nalysis/02_Taxonomic_Assignment. 
-save(track_counts_df, file = "data/01_DADA2/track_read_counts.RData")
+saveRDS(noChimeras_ASV_table, 
+     file = "data/Soh_analysis/noChimeras_ASV_table.RDS")
+saveRDS(asv_tab, file = "data/Soh_analysis/ASV_counts.RDS")
+# And save the track_counts_df a R object, which we will merge with metadata information in the next step of the analysis in analysis/02_Taxonomic_Assignment. 
+saveRDS(track_counts_df, 
+     file = "data/Soh_analysis/track_read_counts.RDS")
 ```
 
 
